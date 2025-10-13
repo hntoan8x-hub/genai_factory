@@ -1,0 +1,14 @@
+PyYAML
+python-dotenv
+openai
+anthropic
+huggingface-hub
+langfuse
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+mlflow
+pydantic
+scikit-learn
+pymysql
+requests

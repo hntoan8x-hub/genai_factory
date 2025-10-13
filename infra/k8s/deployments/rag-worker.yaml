@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: genai-rag-worker
+labels:
+app: genai-rag-worker
+spec:
+replicas: 2
+selector:
+matchLabels:
+app: genai-rag-worker
+template:
+metadata:
+labels:
+app: genai-rag-worker
+spec:
+containers:
+- name: rag-worker
+image: your-docker-registry/rag-worker:latest
+resources:
+requests:
+memory: "256Mi"
+cpu: "250m"
+limits:
+memory: "512Mi"
+cpu: "500m"
+envFrom:
+- secretRef:
+name: vector-db-credentials

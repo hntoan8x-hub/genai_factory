@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: genai-assistant-deployment
+labels:
+app: genai-assistant
+spec:
+replicas: 3
+selector:
+matchLabels:
+app: genai-assistant
+template:
+metadata:
+labels:
+app: genai-assistant
+spec:
+containers:
+- name: assistant
+image: your-docker-registry/genai-assistant:latest
+ports:
+- containerPort: 8000
+resources:
+requests:
+memory: "512Mi"
+cpu: "500m"
+limits:
+memory: "1Gi"
+cpu: "1000m"
+envFrom:
+- configMapRef:
+name: assistant-config
+- secretRef:
+name: api-keys-secret
+# Service account for secrets and other resource access
+serviceAccountName: genai-assistant-sa

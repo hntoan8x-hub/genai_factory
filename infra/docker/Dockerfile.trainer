@@ -1,0 +1,28 @@
+Use a base image with GPU support for training jobs
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu20.04
+
+Install Python and other build tools
+RUN apt-get update && apt-get install -y 
+
+python3-pip 
+
+git 
+
+build-essential 
+
+&& rm -rf /var/lib/apt/lists/*
+
+Set working directory
+WORKDIR /app
+
+Copy requirements and install dependencies
+A separate, minimal requirements file for training would be better in a large project
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+Copy the entire application code
+COPY . .
+
+Command to run a training script
+This is a placeholder; the actual command would be defined by the scheduler
+CMD ["python", "GenAI_Factory/domain_models/genai_assistant/services/assistant_trainer.py"]
