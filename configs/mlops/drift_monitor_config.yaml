@@ -1,0 +1,22 @@
+# configs/mlops/drift_monitor_config.yaml
+DRIFT_MONITOR_CONFIG:
+  # Dữ liệu cơ sở để so sánh (Baseline Data)
+  baseline_data_uri: "s3://mlops-artifacts/model_v1/production_data_snapshot.parquet"
+
+  # Khoảng thời gian phân tích (Frequency)
+  analysis_window_days: 7
+
+  # --- Cấu hình Ngưỡng (Thresholds) ---
+  data_drift_threshold: 0.15 # Ngưỡng tối đa cho phép của chỉ số Drift (ví dụ: KS-Statistic)
+
+  # Cấu hình Concept Drift (Độ lệch Khái niệm - dựa trên hiệu suất)
+  concept_drift_check_enabled: True
+  performance_metric: "accuracy" # Metric theo dõi
+  performance_drop_tolerance: 0.03 # Cho phép drop 3% trước khi cảnh báo
+
+  # Cấu hình Alerting
+  alert_recipient_email: "risk_ops@yourbank.com"
+  alert_slack_channel: "#mlops-alerts"
+
+  # 🚨 BỔ SUNG: Key cho Alert Adapter (để hệ thống DI tìm instance)
+  alert_adapter_key: "slack_alert_adapter"

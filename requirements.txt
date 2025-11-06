@@ -1,14 +1,35 @@
+# MLOps Core & Utilities
+pydantic>=2.0
 PyYAML
-python-dotenv
-openai
-anthropic
-huggingface-hub
-langfuse
-opentelemetry-api
-opentelemetry-sdk
-opentelemetry-exporter-otlp
-mlflow
-pydantic
+numpy
 scikit-learn
-pymysql
+joblib
+
+# Async & I/O
+asyncio
+aioredis # Nếu MemoryService sử dụng Redis (như đã giả định trong MemoryService)
 requests
+
+# LLM & Telemetry
+openai
+opentelemetry-api
+prometheus-client
+
+# Ingestion Layer (Loaders)
+pypdf
+python-docx
+
+# Vector Database Connectors (Feature Store)
+pinecone-client
+weaviate-client
+pymilvus
+chromadb
+faiss-cpu
+
+# Inference (API)
+fastapi
+uvicorn
+gunicorn
+
+# MLOps Tracking (MLflow)
+mlflow

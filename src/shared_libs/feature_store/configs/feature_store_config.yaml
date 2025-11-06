@@ -1,0 +1,44 @@
+# feature_store/configs/feature_store_config.yaml
+
+# Cấu hình Vector Store (chỉ chọn 1)
+vector_store:
+  type: chromadb
+  enabled: true
+  params:
+    collection_name: "nlp_documents"
+
+# vector_store:
+#   type: faiss
+#   enabled: false
+#   params:
+#     dimension: 384 # Ví dụ cho mô hình MiniLM
+
+# vector_store:
+#   type: milvus
+#   enabled: false
+#   params:
+#     host: "localhost"
+#     port: "19530"
+#     collection_name: "nlp_docs"
+#     vector_dim: 768
+
+# Cấu hình Retriever (chỉ chọn 1)
+retriever:
+  type: dense
+  enabled: true
+  params:
+    embedding_model_name: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+# retriever:
+#   type: hybrid
+#   enabled: false
+#   params:
+#     embedding_model_name: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+#     corpus_texts: [] # Cần cung cấp corpus để BM25 hoạt động
+
+# Cấu hình Reranker (tùy chọn)
+reranker:
+  type: cross_encoder
+  enabled: true
+  params:
+    model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"

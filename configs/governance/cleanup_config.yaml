@@ -1,0 +1,18 @@
+# configs/governance/cleanup_config.yaml
+# cleanup_config.yaml (Cho cleanup_old_artifacts.py)
+CLEANUP_GOVERNANCE:
+  # Chính sách Giữ lại (Retention Policy)
+  artifact_retention_days: 120 # Giữ lại các artifact không được đăng ký trong 120 ngày
+
+  # Cấu hình MLOps & Storage
+  mlflow_uri: "http://mlflow-server:5000" # URI kết nối MLflow
+  storage_bucket: "s3://mlops-artifact-store-us-east-1" # Bucket S3/GCS chứa file mô hình
+
+  # Danh sách mô hình cần giám sát
+  target_model_names:
+    - "genai-assistant"
+    - "risk-assessment-model"
+
+  # Cấu hình Khóa (Locking)
+  # Các tag mô hình trong MLflow registry không được xóa
+  protected_tags: ["Production", "Staging", "Candidate"]

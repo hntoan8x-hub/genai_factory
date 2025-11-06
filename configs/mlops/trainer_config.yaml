@@ -1,0 +1,22 @@
+# configs/mlops/trainer_config.yaml
+
+MLOPS_CONFIG:
+  # Cấu hình MLOps Tracking
+  mlflow_tracking_uri: "http://mlflow-server:5000"
+  mlflow_experiment_name: "genai_finetuning" # Bổ sung nếu không có mặc định
+
+  # 🚨 BỔ SUNG: Key LLM cho mục đích đánh giá (LLM-as-a-Judge)
+  evaluation_llm_config_key: "eval_judge_llm"
+
+  # 🚨 BỔ SUNG: Đường dẫn Tool Service (Trainer cần Tool Service để đánh giá chất lượng)
+  tool_service_config_path: "configs/shared/tool_config.yaml"
+
+  # Cấu hình Fine-Tuning
+  finetuning_params:
+    model_name: "gpt-3.5-turbo-0125" # Khớp với LLMBaseConfig
+    dataset_uri: "s3://my-finops-data/finetune_data_v2.jsonl"
+    learning_rate: 0.00001
+    epochs: 3
+
+  # Cổng chất lượng (Quality Gate)
+  quality_threshold: 0.80 # (Dùng trong AssistantTrainer logic)

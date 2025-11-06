@@ -1,0 +1,21 @@
+# configs/deployment/deployer_config.yaml
+
+DEPLOYMENT_TARGET:
+  # Định nghĩa nền tảng mặc định cho Trainer để triển khai
+  platform_type: "kubernetes"
+
+  kubernetes:
+    namespace: "genai-prod"
+    # Cấu hình K8s-specific (Resource requests/limits)
+    resource_limits:
+      cpu_request: "250m"
+      memory_limit: "2Gi"
+
+  on_premise:
+    script_path: "/opt/mlops/deploy_internal_svc.sh"
+    api_endpoint: "http://internal-model-server/deploy"
+
+  # Cấu hình cho Vector Database (RAG)
+  vector_db:
+    endpoint: "https://my-pinecone-instance.io"
+    api_key_secret_name: "PINECONE_API_KEY"

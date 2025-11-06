@@ -1,0 +1,80 @@
+# configs/shared/tool_config.yaml (CẬP NHẬT HOÀN CHỈNH)
+
+TOOL_REGISTRY:
+  # --- 1. DATA ACCESS SERVICE TOOLS (I/O BOUND) ---
+  DATA_ACCESS:
+    sql_query_executor:
+      type: "sql"
+      description: "Execute SELECT queries against the read-only data warehouse."
+      db_connection_string: "postgres://user_readonly:$(DB_PASSWORD)@host:5432/warehouse"
+      secret_key_name: "DB_PASSWORD"
+      is_read_only: True # HARDENING: Khớp với ToolBaseConfig
+
+    data_api_connector:
+      type: "api_connector"
+      description: "Execute read-only GET requests to external or internal REST APIs (non-SQL)."
+      is_read_only: True
+
+    document_retriever:
+      type: "rag"
+      description: "Retrieve internal risk policies and compliance documents from the Vector Database."
+      vector_db_config:
+        endpoint: "https://my-pinecone-instance.io"
+        api_key_secret_name: "PINECONE_API_KEY"
+      is_read_only: True
+
+    file_reader:
+      type: "file_reader"
+      description: "Reads the raw text content of a file from a specified URI (S3, GCS, or local path)."
+      is_read_only: True
+
+  # --- 2. COMPUTE SERVICE TOOLS (CPU BOUND) ---
+  COMPUTE:
+    calculator_tool:
+      type: "calculator"
+      description: "Performs simple arithmetic and complex mathematical calculations."
+      is_read_only: True # Tính toán nội bộ
+
+    financial_risk_model:
+      type: "risk"
+      description: "Calls a proprietary risk assessment model to get a transaction/customer risk score (0.0-1.0)."
+      is_read_only: True
+
+    data_analyzer:
+      type: "analyzer"
+      description: "Perform statistical analysis on tabular data."
+      is_read_only: True
+
+    statistical_visualizer:
+      type: "visualizer"
+      description: "Generates ready-to-run Python code for visualization."
+      is_read_only: True
+
+    json_xml_parser:
+      type: "parser"
+      description: "Parse raw JSON or XML text into structured dictionary/list."
+      is_read_only: True
+
+  # --- 3. GOVERNANCE & EXTERNAL COMMUNICATION TOOLS (DIRECT/GOVERNANCE BOUND) ---
+  GOVERNANCE:
+    web_search_tool:
+      type: "web"
+      description: "Performs real-time web search for external information."
+      api_key_secret_name: "GOOGLE_SEARCH_API_KEY"
+      search_engine_id: "CUSTOM_SEARCH_ID"
+      is_read_only: True
+
+    email_sender_tool:
+      type: "email"
+      description: "Sends an email notification to a specified recipient."
+      smtp_server: "smtp.office365.com"
+      port: 587
+      username: "mlops_service@yourbank.com"
+      password_secret_name: "SERVICE_EMAIL_PASSWORD"
+      is_read_only: False # HÀNH ĐỘNG GHI
+
+    slack_notifier:
+      type: "slack"
+      description: "Send an important message or alert to a designated Slack channel."
+      slack_webhook_url: "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXX"
+      is_read_only: False # HÀNH ĐỘNG GHI

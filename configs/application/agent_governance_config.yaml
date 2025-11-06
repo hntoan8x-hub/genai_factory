@@ -1,0 +1,46 @@
+# configs/application/agent_governance_config.yaml
+AGENT_GOVERNANCE_CONFIG:
+  # --- 1. LLM CONFIG KEY MẶC ĐỊNH (Sử dụng từ llm_config.yaml) ---
+  # Key cho mô hình chính (gpt-4o)
+  primary_llm_key: "LLM_SERVICE"
+
+  # --- 2. FRAMEWORK AGENTS (Tầng 1 - Kỹ năng) ---
+
+  # Planning Agent (Logic/Nhiệt độ thấp)
+  planning_agent:
+    type: "planning"
+    llm_config_key: "primary_llm_key"
+    temperature: 0.1
+    max_loops: 1
+
+  # Reflexion Agent (Sửa lỗi/Nhiệt độ thấp)
+  reflexion_agent:
+    type: "reflexion"
+    llm_config_key: "primary_llm_key"
+    temperature: 0.2
+    max_loops: 1
+
+  # --- 3. GOVERNANCE AGENTS (Tầng 3 - Kiểm soát) ---
+
+  # Safety Agent (Kiểm soát đầu vào/ra)
+  safety_agent:
+    type: "safety"
+    llm_config_key: "primary_llm_key"
+    temperature: 0.0 # Bắt buộc là deterministic
+
+  # Retrieval Agent (Worker chuyên môn hóa RAG)
+  retrieval_agent:
+    type: "retrieval"
+    llm_config_key: "primary_llm_key"
+    tools: ["document_retriever", "file_reader"] # Các tools RAG/Data Access
+    max_loops: 5
+
+  # Meta Agent (Tối ưu hóa FinOps)
+  meta_agent:
+    type: "meta"
+    llm_config_key: "primary_llm_key"
+    temperature: 0.1
+    max_loops: 1
+
+  # 🚨 LƯU Ý: Tool Coordinator và Supervisor được khởi tạo trong Composition Root (assistant_service.py)
+  # vì chúng cần các instances Services/Adapters khác được truyền vào.

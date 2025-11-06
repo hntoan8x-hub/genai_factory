@@ -1,0 +1,94 @@
+# ----------------------------------------------------
+# 🔹 2.1 DEPLOYMENT: Inference API (Role: INFERENCE)
+# ----------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genai-assistant-inference
+  labels:
+    app: genai-assistant
+    role: inference
+spec:
+  replicas: 2 # Khởi tạo 2 replicas ban đầu
+  selector:
+    matchLabels:
+      app: genai-assistant
+  template:
+    metadata:
+      labels:
+        app: genai-assistant
+    spec:
+      securityContext:
+        # HARDENING: Yêu cầu chạy dưới non-root user (appuser)
+        runAsUser: 1000 # Giả sử appuser có UID 1000
+        fsGroup: 1000
+      containers:
+        - name: assistant-api
+          # Sử dụng Image từ inference.Dockerfile
+          image: your-registry/genai-factory:inference-v1.0
+          ports:
+            - containerPort: 8000
+
+          # HARDENING: Resource Limits (CRITICAL for cost control & stability)
+          resources:
+            limits:
+              cpu: "1500m" # 1.5 core
+              memory: "4Gi"
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+
+          # HARDENING: Tiêm Secrets và Configs
+          envFrom:
+            - secretRef:
+                name: genai-factory-secrets
+            - configMapRef:
+                name: genai-factory-configs
+
+          # Liveness/Readiness Probe (Kiểm tra Healthcheck)
+          readinessProbe:
+            httpGet:
+              path: /health # Giả định API có endpoint /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          # Khởi động (Lệnh CMD từ inference.Dockerfile)
+          # CMD ["gunicorn", "api_service.app:app", ...]
+
+---
+# ----------------------------------------------------
+# 🔹 2.2 SERVICE & HPA (HorizontalPodAutoscaler)
+# ----------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: genai-assistant-service
+spec:
+  selector:
+    app: genai-assistant
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: assistant-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: genai-assistant-inference
+  minReplicas: 2
+  maxReplicas: 10 # HARDENING: Giới hạn tối đa 10 replicas
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70 # Tự động scale khi CPU > 70%

@@ -1,0 +1,13 @@
+#infra/k8s/assistant-service.yaml (Load Balancing)
+apiVersion: v1
+kind: Service
+metadata:
+  name: genai-assistant-service
+spec:
+  selector:
+    app: genai-assistant
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP # Dùng ClusterIP cho nội bộ, dùng Ingress cho bên ngoài

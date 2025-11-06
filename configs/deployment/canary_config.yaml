@@ -1,0 +1,20 @@
+# configs/deployment/canary_config.yaml
+# canary_config.yaml (Cho run_canary_rollout.py)
+CANARY_ROLLOUT_CONFIG:
+  # Các bước chuyển đổi lưu lượng (Phần trăm lưu lượng mới)
+  traffic_steps: [5, 20, 50, 100]
+
+  # Thời gian giám sát giữa các bước (Time-on-step)
+  monitoring_duration_seconds: 180 # 3 phút giám sát ở mỗi bước
+
+  # Ngưỡng Thất bại Mềm (Soft Failure Metrics)
+  canary_quality_gates:
+    max_5xx_rate: 0.005 # Tỷ lệ lỗi dịch vụ (5xx) tối đa 0.5%
+    max_safety_violations_per_minute: 2 # Số lần vi phạm an toàn tối đa (từ Log Store)
+    max_cost_increase_percent: 0.15 # Chi phí LLM trung bình không được tăng quá 15% so với bản stable
+
+  # Cấu hình Rollback (để kích hoạt Rollback Job nếu thất bại)
+  rollback_command: "python src/scripts/rollback_deployment.py"
+
+  # 🚨 BỔ SUNG: Key cho Traffic Controller (nếu có nhiều loại hạ tầng)
+  traffic_controller_type: "kubernetes_istio"

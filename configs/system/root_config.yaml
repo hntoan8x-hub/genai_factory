@@ -1,0 +1,24 @@
+# configs/system/root_config.yaml (File Config Cấp cao)
+
+SYSTEM_ROOT_CONFIG:
+  # --- 1. RUNTIME & INFRASTRUCTURE (Dữ liệu từ server_config.yaml) ---
+  server_host: "0.0.0.0"
+  server_port: 8000
+  redis_url: "redis://genai-redis-service:6379/0" # Cho Rate Limiting và MemoryService
+
+  # --- 2. HARDENING & RATE LIMITING ---
+  rate_limit_requests: 5
+  rate_limit_seconds: 30
+
+  # --- 3. GOVERNANCE & MLOPS TRACKING (GLOBAL GLUE) ---
+  mlflow_tracking_uri: "http://mlflow-server:5000" # Cần cho AssistantService để khởi tạo Tracker
+  mlflow_experiment_name: "GenAI_Factory_Inference"
+
+  # --- 4. CÁC KEY THAM CHIẾU CẤU HÌNH (GLUEING) ---
+  # AssistantService sử dụng các key này để tìm config chi tiết trong các file khác:
+  llm_service_config_key: "LLM_SERVICE" # Key cho LLM Service trong llm_config.yaml
+  safety_config_key: "SAFETY_CONFIG" # Key cho SafetyConfig trong safety_config.yaml
+  tool_config_key: "TOOL_REGISTRY" # Key cho Tool Registry trong tool_config.yaml
+
+  # Key cho các Agent Domain chính (Sử dụng bởi AssistantService/Supervisor)
+  domain_config_key: "ASSISTANT_CONFIG"

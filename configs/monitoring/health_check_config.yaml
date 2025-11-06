@@ -1,0 +1,26 @@
+# configs/monitoring/health_check_config.yaml
+# health_check_config.yaml (Cho monitor_service_health.py)
+HEALTH_CHECK_CONFIG:
+  # Danh sách các API Endpoint cần kiểm tra
+  target_endpoints:
+    - name: "Main_Health_Check"
+      url: "http://genai-assistant-prod/health"
+      status_code: 200
+      timeout_seconds: 5
+
+    - name: "Core_Inference_Readiness"
+      # Kiểm tra một API nhạy cảm để đảm bảo LLM có thể truy cập được
+      url: "http://genai-assistant-prod/generate"
+      method: "POST"
+      request_body:
+        pipeline_type: "conversation"
+        query: "Hi"
+        user_id: "monitor_bot"
+      required_response_keywords: ["Welcome"]
+      status_code: 200
+      timeout_seconds: 10
+
+  # Cấu hình hệ thống cảnh báo
+  alerting:
+    severity_level: "HIGH"
+    cooldown_minutes: 15

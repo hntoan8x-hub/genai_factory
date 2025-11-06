@@ -1,0 +1,116 @@
+variables:
+  # Base registry nơi các image đã được Hardening được lưu trữ
+  REGISTRY_BASE: your-internal-registry/genai-factory
+  # Phiên bản mới sẽ được triển khai, gắn với Git Commit SHA
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  # Phiên bản Inference Image hoàn chỉnh (sẽ được deploy)
+  INFERENCE_IMAGE: $REGISTRY_BASE:inference-$IMAGE_TAG
+  # Endpoint cần kiểm thử (Giả định K8s LoadBalancer IP/DNS)
+  ENDPOINT_URL: http://genai-assistant-service.production.internal
+# Stage 1: Build & Package (CI)
+stages:
+  - build
+  - test
+  - deploy
+  - validate
+  - rollout
+
+# ----------------------------------------------------
+# 🔹 Stage 1: BUILD
+# Trách nhiệm: Build Docker Images (Trainer, Inference, ETL)
+# ----------------------------------------------------
+build_images:
+  stage: build
+  image: docker:20.10.16 # Dùng image Docker để chạy lệnh Docker
+  services:
+    - docker:20.10.16-dind
+  script:
+    - echo "$CI_JOB_TOKEN" | docker login -u gitlab-ci-token $REGISTRY_BASE --password-stdin
+
+    # Build Image BASE (Stage 1 & 2) - Cần chạy đầu tiên
+    - docker build -f Dockerfile.base -t $REGISTRY_BASE:hardened-base .
+
+    # Build Image INFERENCE (Sẽ được triển khai Real-time)
+    - docker build -f inference.Dockerfile -t $INFERENCE_IMAGE .
+
+    # Build Image TRAINER (Cho Indexing/Finetuning)
+    - docker build -f trainer.Dockerfile -t $REGISTRY_BASE:trainer-$IMAGE_TAG .
+
+    # Đẩy tất cả các Images lên Registry nội bộ
+    - docker push $INFERENCE_IMAGE
+    - docker push $REGISTRY_BASE:trainer-$IMAGE_TAG
+
+  tags:
+    - docker-build-runner # Sử dụng runner có quyền build và push Docker
+# ----------------------------------------------------
+# 🔹 Stage 2: TEST
+# Trách nhiệm: Chạy Unit Tests, Pydantic Schema Validation Tests
+# ----------------------------------------------------
+unit_tests:
+  stage: test
+  image: $REGISTRY_BASE:hardened-base # Dùng image base để chạy code đã copy
+  script:
+    - python3 -m pytest tests/unit/ # Chạy Unit Tests
+    - python3 scripts/check_config_consistency.py # Kiểm tra tính nhất quán (ví dụ: Vector Dim)
+# ----------------------------------------------------
+# 🔹 Stage 3: DEPLOY
+# Trách nhiệm: Triển khai Image mới lên K8s (chưa chuyển traffic)
+# ----------------------------------------------------
+deploy_new_version:
+  stage: deploy
+  image: $REGISTRY_BASE:experimentation-v1.0 # Dùng EXPERIMENTATION Role
+  script:
+    - echo "Triển khai K8s Deployment file..."
+    # 1. Chạy script deploy_service.py (sẽ sử dụng K8s API bên dưới)
+    - python3 scripts/deploy_service.py \
+      --model-name "genai-assistant" \
+      --artifact-uri "mlflow:///assistant-$IMAGE_TAG" \
+      --image-uri $INFERENCE_IMAGE
+
+    - echo "Đã triển khai $IMAGE_TAG thành công (0% traffic)."
+  # Chỉ chạy khi Stage TEST thành công
+  needs:
+    - unit_tests
+  environment:
+    name: production
+
+# ----------------------------------------------------
+# 🔹 Stage 4: VALIDATE (Load Test - Kiểm tra SLA)
+# Trách nhiệm: Kiểm tra độ trễ (Latency) và tỷ lệ lỗi (Error Rate)
+# ----------------------------------------------------
+run_performance_test:
+  stage: validate
+  image: $REGISTRY_BASE:experimentation-v1.0
+  script:
+    - echo "Bắt đầu kiểm tra Load Test (SLA Check)..."
+    # Chạy run_load_test.py (kiểm tra P95 Latency)
+    - python3 scripts/run_load_test.py \
+      --endpoint-url $ENDPOINT_URL \
+      --model-version $IMAGE_TAG
+
+    - echo "Load Test hoàn tất. Bắt đầu Canary Rollout."
+  # Chỉ chạy khi Stage DEPLOY thành công
+  needs:
+    - deploy_new_version
+  environment:
+    name: production
+
+# ----------------------------------------------------
+# 🔹 Stage 5: ROLLOUT (Canary & Auto-Rollback)
+# Trách nhiệm: Chuyển traffic và tự động Rollback nếu check_live_metrics thất bại
+# ----------------------------------------------------
+run_canary_rollout:
+  stage: rollout
+  image: $REGISTRY_BASE:experimentation-v1.0
+  script:
+    # Chạy script điều phối Canary Rollout (Sẽ gọi Rollback nếu cần)
+    - python3 scripts/run_canary_rollout.py \
+      --endpoint-name "genai-assistant-service" \
+      --new-version $IMAGE_TAG \
+      --stable-version $STABLE_MODEL_VERSION # Phiên bản ổn định đã biết
+
+  # Luôn cho phép chạy (dù Stage trước đó có thể có lỗi logic)
+  needs:
+    - run_performance_test
+  environment:
+    name: production

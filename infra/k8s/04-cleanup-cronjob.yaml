@@ -1,0 +1,44 @@
+# Triển khai Dọn dẹp (Governance CronJob)
+# ----------------------------------------------------
+# 🔹 CRONJOB: Artifact Cleanup (Role: ETL)
+# ----------------------------------------------------
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: artifact-cleanup-job
+spec:
+  # Chạy hàng ngày lúc 01:00 sáng UTC (đảm bảo ngoài giờ cao điểm)
+  schedule: "0 1 * * *"
+  successfulJobsHistoryLimit: 3 # Giữ 3 lịch sử jobs thành công
+  failedJobsHistoryLimit: 1 # Giữ 1 lịch sử jobs thất bại
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup-runner
+              # Sử dụng Image từ etl.Dockerfile
+              image: your-registry/genai-factory:etl-v1.0
+
+              # HARDENING: Resource Limits (Cleanup cần ít tài nguyên hơn)
+              resources:
+                limits:
+                  cpu: "500m"
+                  memory: "1Gi"
+                requests:
+                  cpu: "100m"
+                  memory: "512Mi"
+
+              envFrom:
+                - secretRef:
+                    name: genai-factory-secrets
+
+              # ENTRYPOINT: Override để chạy script dọn dẹp
+              args:
+                [
+                  "python3",
+                  "scripts/cleanup_old_artifacts.py",
+                  "--config-path",
+                  "configs/governance/cleanup_config.yaml",
+                ]

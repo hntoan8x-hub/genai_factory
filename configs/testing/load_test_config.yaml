@@ -1,0 +1,29 @@
+# configs/testing/load_test_config.yaml (CẬP NHẬT HOÀN CHỈNH)
+
+LOAD_TEST_CONFIG:
+  # Cấu hình Kết nối API
+  endpoint_path: "/generate"
+  auth_token: "ANALYST_TOKEN_456"
+
+  # Cấu hình Tải
+  target_qps: 15
+  duration_seconds: 60
+
+  # Dữ liệu Đầu vào (Test Cases)
+  test_cases:
+    - name: "Agent_Complex_Query"
+      pipeline_type: "orchestration" # Khớp với Pipeline Orchestration
+      query: "Analyze the current interest rate risk implications on the Q2 corporate bond portfolio performance and summarize the key findings."
+      weight: 0.7
+    - name: "Simple_Conversation"
+      pipeline_type: "conversation" # Khớp với Pipeline Conversation
+      query: "What is the definition of sovereign risk?"
+      weight: 0.3
+
+  # Cổng Chất lượng (CRITICAL HARDENING)
+  quality_gates:
+    max_p95_latency_ms: 750 # (Dùng trong run_load_test.py)
+    max_error_rate: 0.015 # (Dùng trong run_load_test.py)
+
+    # 🚨 BỔ SUNG: Kiểm tra chi phí (FinOps)
+    max_cost_per_query_usd: 0.01 # Giới hạn chi phí tối đa cho một Agent Query

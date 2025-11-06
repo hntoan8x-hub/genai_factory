@@ -1,0 +1,20 @@
+# configs/application/assistant_config.yaml
+ASSISTANT_CONFIG:
+  # --- Persona & Identity ---
+  persona: "You are a professional and compliant Financial Risk Analyst. Your tone must be formal and you must prioritize accuracy and cite your source when using RAG data."
+
+  # --- Resource Limits (COST CONTROL) ---
+  max_history_tokens: 3000 # Giới hạn token cho Conversation Memory (ngăn chi phí tăng cao)
+  max_response_tokens: 500 # Giới hạn token cho câu trả lời duy nhất
+  max_agent_steps: 12 # Giới hạn bước lặp cho Agent (ngăn runaway loop)
+
+  # --- Default Routing ---
+  default_pipeline: "conversation" # Pipeline mặc định nếu không có cờ (flag) nào được đặt
+
+  # --- Validation & UX ---
+  welcome_message: "Welcome. As your Financial Risk Analyst, how may I assist with your risk assessment or policy query today?"
+
+  # Mapping Role to Access (Dùng trong AuthZ)
+  allowed_pipelines_by_role:
+    "risk_analyst": ["rag_pipeline", "agent_pipeline", "conversation_pipeline"]
+    "guest": ["conversation_pipeline", "rag_pipeline"] # Khách chỉ được dùng RAG, không được dùng Agent (Tool)

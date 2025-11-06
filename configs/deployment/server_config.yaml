@@ -1,0 +1,16 @@
+# configs/deployment/server_config.yaml
+SERVER_CONFIG:
+  # Cấu hình Uvicorn/Gunicorn (Sử dụng Async Python Server)
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4 # Số lượng process worker (thường là 2xCPU + 1)
+
+  # Cấu hình Redis (dùng cho Rate Limiting và MemoryService)
+  redis_url: "redis://genai-redis-service:6379/0" # Hardening: Sử dụng Service Name trong K8s
+
+  # Cấu hình OpenTelemetry Exporter (Tracing)
+  otel_exporter_endpoint: "http://otel-collector:4317"
+
+  # Môi trường chạy (Production, Staging, Dev)
+  environment: "Production"
+  log_level: "INFO"

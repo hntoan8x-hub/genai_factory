@@ -1,0 +1,43 @@
+# Triển khai Indexing (MLOps Job)
+# ----------------------------------------------------
+# 🔹 JOB: RAG Indexing (Role: TRAINER)
+# ----------------------------------------------------
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rag-indexing-onetime-$(date +%s) # Tên Job độc nhất theo thời gian
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure # Nếu Job thất bại, K8s sẽ thử lại
+      containers:
+        - name: rag-indexer
+          # Sử dụng Image từ trainer.Dockerfile
+          image: your-registry/genai-factory:trainer-v1.0
+
+          # HARDENING: Resource Limits (Indexing là CPU/I/O nặng)
+          resources:
+            limits:
+              cpu: "4000m" # 4 cores
+              memory: "8Gi"
+            requests:
+              cpu: "1000m"
+              memory: "4Gi"
+
+          envFrom:
+            - secretRef:
+                name: genai-factory-secrets
+            - configMapRef:
+                name: genai-factory-configs
+
+          # ENTRYPOINT: Override để chạy script Indexing
+          # Chuyển các tham số cấu hình qua args (theo parse_args trong run_rag_indexing.py)
+          args:
+            [
+              "--ingestion-config-path",
+              "$(INGESTION_CONFIG_PATH)",
+              "--feature-store-config-path",
+              "$(FEATURE_STORE_CONFIG_PATH)",
+            ]
+
+          # Lệnh chạy chính là ENTRYPOINT ["python3", "scripts/run_rag_indexing.py"]

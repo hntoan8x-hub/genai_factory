@@ -1,35 +1,50 @@
+# infra/k8s/assistant-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: genai-assistant-deployment
-labels:
-app: genai-assistant
+  name: genai-assistant-deployment
+  labels:
+    app: genai-assistant
 spec:
-replicas: 3
-selector:
-matchLabels:
-app: genai-assistant
-template:
-metadata:
-labels:
-app: genai-assistant
-spec:
-containers:
-- name: assistant
-image: your-docker-registry/genai-assistant:latest
-ports:
-- containerPort: 8000
-resources:
-requests:
-memory: "512Mi"
-cpu: "500m"
-limits:
-memory: "1Gi"
-cpu: "1000m"
-envFrom:
-- configMapRef:
-name: assistant-config
-- secretRef:
-name: api-keys-secret
-# Service account for secrets and other resource access
-serviceAccountName: genai-assistant-sa
+  replicas: 2 # Bắt đầu với 2 replicas
+  selector:
+    matchLabels:
+      app: genai-assistant
+  template:
+    metadata:
+      labels:
+        app: genai-assistant
+    spec:
+      containers:
+        - name: assistant-service
+          image: your-registry/genai-factory:latest # Thay bằng image của bạn
+          ports:
+            - containerPort: 8000
+
+          # Resource Limits (HARDENING: Cost/Stability)
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi" # Ngăn ngừa lỗi OOM (Out of Memory)
+
+          # Liveness & Readiness Probes (HARDENING: Self-healing & Load Balancing)
+          livenessProbe: # Kiểm tra trạng thái sống (Self-healing)
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+          readinessProbe: # Kiểm tra sẵn sàng phục vụ traffic (Load Balancing)
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+
+          # Sử dụng External Secrets đã Hardening (Giả định Secret đã được đồng bộ hóa)
+          envFrom:
+            - secretRef:
+                name: genai-api-keys-sync # Tên Secret được tạo bởi External Secrets Operator

@@ -1,0 +1,26 @@
+# configs/application/safety_config.yaml
+
+SAFETY_CONFIG:
+  # Cài đặt kiểm duyệt chung
+  moderation_api_enabled: True
+  toxicity_threshold: 0.85
+
+  # Ngăn chặn Prompt Injection
+  input_injection_check: True
+  blocklist:
+    - "ignore previous instructions"
+    - "act as a new persona"
+
+  # 🚨 BỔ SUNG: PII Redaction (Sử dụng bởi SafetyPipeline)
+  pii_patterns:
+    - "\d{3}-\d{2}-\d{4}" # SSN format
+    - "([A-Z]{2}[0-9]{2})\\s?([0-9A-Z]{4}\\s?){4}" # IBAN mock
+  
+  # 🚨 BỔ SUNG: Hành động khi output fail (REDACT hoặc BLOCK)
+  output_toxicity_action: "REDACT"
+
+  # Quy tắc kiểm tra chất lượng mô hình sau Fine-Tuning (Model Guard Criteria)
+  deployment_criteria:
+    safety_score_min: 0.98
+    hallucination_rate_max: 0.05
+    coherence_score_min: 0.85
